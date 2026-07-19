@@ -11,15 +11,9 @@ export default function Benchmark() {
 
   return (
     <View style={styles.container}>
-      <Scoreboard />
-
-        <View style={styles.boardContainer}>
-            <Board
-            cells={cells}
-            columns={8}
-            onCellPress={(cell) => console.log(cell)}
-            />
-        </View>
+      <View style={styles.boardContainer}>
+        <Board cells={cells} />
+      </View>
     </View>
   );
 }
