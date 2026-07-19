@@ -3,24 +3,25 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+
+  grid: {
+    flex: 1,
+
     justifyContent: "center",
     alignItems: "center",
   },
 
-  board: {
+  row: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    alignItems: "center",
   },
 
   cell: {
     justifyContent: "center",
     alignItems: "center",
 
+    backgroundColor: "#E5E5E5",
     borderRadius: 8,
-
-    backgroundColor: "#DDD",
   },
 
   activeCell: {
@@ -29,7 +30,7 @@ export const styles = StyleSheet.create({
 
   text: {
     color: "#FFF",
-    fontWeight: "700",
     fontSize: 18,
+    fontWeight: "700",
   },
 });

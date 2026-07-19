@@ -4,35 +4,16 @@ import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
 import { styles } from "./styles";
 import BoardProps from "@/types/Board/BoardProps";
 
-export default function Board({
-  cells,
-  columns = 8,
-  gap = 8,
-  onCellPress,
-}: BoardProps) {
-  const [boardSize, setBoardSize] = useState({
+export default function Board({ cells, gap = 8, onCellPress }: BoardProps) {
+  const [layout, setLayout] = useState({
     width: 0,
     height: 0,
   });
 
-  const rows = Math.ceil(cells.length / columns);
-
-  const cellSize = useMemo(() => {
-    if (!boardSize.width || !boardSize.height) return 0;
-
-    const availableWidth = boardSize.width - gap * (columns - 1);
-
-    const availableHeight = boardSize.height - gap * (rows - 1);
-
-    return Math.floor(
-      Math.min(availableWidth / columns, availableHeight / rows),
-    );
-  }, [boardSize, columns, rows, gap]);
-
   function handleLayout(event: LayoutChangeEvent) {
     const { width, height } = event.nativeEvent.layout;
 
-    setBoardSize((previous) => {
+    setLayout((previous) => {
       if (previous.width === width && previous.height === height) {
         return previous;
       }
@@ -41,25 +22,88 @@ export default function Board({
     });
   }
 
+  const { columns, rows, cellSize } = useMemo(() => {
+    if (!layout.width || !layout.height) {
+      return {
+        columns: 1,
+        rows: cells.length,
+        cellSize: 0,
+      };
+    }
+
+    let bestColumns = 1;
+    let bestRows = cells.length;
+    let bestCellSize = 0;
+
+    // Testa todas as possibilidades e escolhe a que gera
+    // a maior célula possível.
+    for (let cols = 1; cols <= cells.length; cols++) {
+      const rows = Math.ceil(cells.length / cols);
+
+      const widthSize = (layout.width - gap * (cols - 1)) / cols;
+
+      const heightSize = (layout.height - gap * (rows - 1)) / rows;
+
+      const size = Math.floor(Math.min(widthSize, heightSize));
+
+      if (size > bestCellSize) {
+        bestCellSize = size;
+        bestColumns = cols;
+        bestRows = rows;
+      }
+    }
+
+    return {
+      columns: bestColumns,
+      rows: bestRows,
+      cellSize: bestCellSize,
+    };
+  }, [cells.length, layout.width, layout.height, gap]);
+
+  const matrix = useMemo(() => {
+    return Array.from({ length: rows }, (_, row) =>
+      cells.slice(row * columns, row * columns + columns),
+    );
+  }, [cells, rows, columns]);
+
   return (
     <View style={styles.container} onLayout={handleLayout}>
-      <View style={[styles.board, { gap }]}>
-        {cells.map((cell) => (
-          <Pressable
-            key={cell.id}
-            disabled={cell.disabled}
-            onPress={() => onCellPress?.(cell)}
+      <View
+        style={[
+          styles.grid,
+          {
+            rowGap: gap,
+          },
+        ]}
+      >
+        {matrix.map((row, rowIndex) => (
+          <View
+            key={rowIndex}
             style={[
-              styles.cell,
-              cell.visible && styles.activeCell,
+              styles.row,
               {
-                width: cellSize,
-                aspectRatio: 1,
+                columnGap: gap,
               },
             ]}
           >
-            {cell.visible && <Text style={styles.text}>{cell.value}</Text>}
-          </Pressable>
+            {row.map((cell) => (
+              <Pressable
+                key={cell.id}
+                disabled={cell.disabled}
+                onPress={() => onCellPress?.(cell)}
+                style={[
+                  styles.cell,
+                  cell.visible && styles.activeCell,
+                  {
+                    width: cellSize,
+                    height: cellSize,
+                  },
+                ]}
+              >
+                {cell.visible && <Text style={styles.text}>{cell.value}</Text>}
+              </Pressable>
+            ))}
+          </View>
         ))}
       </View>
     </View>
